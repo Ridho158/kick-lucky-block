@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kick Lucky Block Multiplayer</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; background: #1a1a1a; color: white; padding: 20px; }
+        h1 { color: #ffcc00; }
+        #lucky-block {
+            width: 160px; height: 160px; background: #ffcc00; margin: 30px auto;
+            border: 6px solid #fff; border-radius: 20px; display: flex;
+            align-items: center; justify-content: center; font-size: 90px; font-weight: bold;
+            color: #222; cursor: pointer; user-select: none; transition: transform 0.1s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+        #lucky-block:active { transform: scale(0.85); background: #ddb300; }
+        #score-board { font-size: 18px; margin-top: 20px; background: #2a2a2a; padding: 15px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>Kick Lucky Block!</h1>
+    <p>Tendang kotak kuning 10 kali secepat mungkin!</p>
+    
+    <div id="lucky-block">?</div>
+    <div id="score-board">Menghubungkan ke server...</div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const block = document.getElementById('lucky-block');
+        const scoreBoard = document.getElementById('score-board');
+
+        block.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            socket.emit('kickBlock');
+        });
+
+        block.addEventListener('mousedown', () => {
+            socket.emit('kickBlock');
+        });
+
+        socket.on('updateScore', (scores) => {
+            let output = '<h3>Papan Skor Realtime:</h3>';
+            let playerNum = 1;
+            for (let id in scores) {
+                let statusInfo = id === socket.id ? " (Anda)" : " (Lawan)";
+                output += `<p>Pemain ${playerNum}${statusInfo}: <b>${scores[id]}</b> tendangan</p>`;
+                playerNum++;
+            }
+            scoreBoard.innerHTML = output;
+        });
+
+        socket.on('gameOver', (winnerId) => {
+            if (winnerId === socket.id) {
+                alert('LUAR BIASA! Anda menang telak! 🎉');
+            } else {
+                alert('ANDA KALAH! Lawan menendang lebih cepat! 😢');
+            }
+        });
+    </script>
+</body>
+</html>
